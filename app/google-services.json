@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "961633246431",
+    "firebase_url": "https://vizisegmessager.firebaseio.com",
+    "project_id": "vizisegmessager",
+    "storage_bucket": "vizisegmessager.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961633246431:android:b4eda3e6a0548120",
+        "android_client_info": {
+          "package_name": "utfpr.loyola.gabriel.viziseg"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "961633246431-m9tk2s9jrv2hhpm2kudf75luatmd9peb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfWsX5OZpdOXDIZPRpFdMZMl2kP8kPjPY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
