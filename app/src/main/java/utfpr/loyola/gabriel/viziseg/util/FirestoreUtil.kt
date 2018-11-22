@@ -7,11 +7,9 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import java.lang.NullPointerException
-import utfpr.loyola.gabriel.viziseg.recyclerview.item.PersonItem
 import com.xwray.groupie.kotlinandroidextensions.Item
 import utfpr.loyola.gabriel.viziseg.model.*
-import utfpr.loyola.gabriel.viziseg.recyclerview.item.ImageMessageItem
-import utfpr.loyola.gabriel.viziseg.recyclerview.item.TextMessageItem
+import utfpr.loyola.gabriel.viziseg.recyclerview.item.*
 
 object FirestoreUtil {
     private val firestoreInstance: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
@@ -21,6 +19,7 @@ object FirestoreUtil {
                 ?: throw NullPointerException("UID is null.")}")
 
     private val chatChannelsCollectionRef = firestoreInstance.collection("chatChannels")
+    private val groupsCollectionRef = firestoreInstance.collection("groups")
 
     fun initCurrentUserIfFirstTime(onComplete: () -> Unit) {
         currentUserDocRef.get().addOnSuccessListener { documentSnapshot ->
@@ -68,7 +67,49 @@ object FirestoreUtil {
             }
     }
 
+    fun addGroupUsersListener(context: Context, onListen: (List<Item>) -> Unit): ListenerRegistration {
+        return firestoreInstance.collection("users")
+            .addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+                if (firebaseFirestoreException != null) {
+                    Log.e("FIRESTORE", "Users listener error.", firebaseFirestoreException)
+                    return@addSnapshotListener
+                }
+                val items = mutableListOf<Item>()
+                querySnapshot?.documents?.forEach {
+                    if (it.id != FirebaseAuth.getInstance().currentUser?.uid)
+                        items.add(GroupPersonItem(it.toObject(User::class.java)!!, it.id, false, context))
+                }
+                onListen(items)
+            }
+    }
+
+    fun addGroupsListener(context: Context, onListen: (List<Item>) -> Unit): ListenerRegistration {
+        return firestoreInstance.collection("groups")
+            .addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+                if (firebaseFirestoreException != null) {
+                    Log.e("FIRESTORE", "Groups listener error.", firebaseFirestoreException)
+                    return@addSnapshotListener
+                }
+                val items = mutableListOf<Item>()
+                querySnapshot?.documents?.forEach {
+                    val group = it.toObject(Group::class.java)!!
+                    if (group.userIds.any { x -> x == FirebaseAuth.getInstance().currentUser?.uid }) {
+                        items.add(GroupItem(group, it.id, context))
+                    }
+                }
+                onListen(items)
+            }
+    }
+
     fun removeListener(registration: ListenerRegistration) = registration.remove()
+
+    fun createGroup(groupName: String,
+                    groupDescription: String,
+                    userIds: MutableList<String>) {
+
+        val newGroup = groupsCollectionRef.document()
+        newGroup.set(Group(groupName, groupDescription, userIds))
+    }
 
     fun getOrCreateChatChannel(otherUserId: String,
                                onComplete: (channelId: String) -> Unit) {
@@ -82,7 +123,7 @@ object FirestoreUtil {
                 val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
 
                 val newChannel = chatChannelsCollectionRef.document()
-                newChannel.set(ChatChannel(mutableListOf(currentUserId, otherUserId), false))
+                newChannel.set(ChatChannel(mutableListOf(currentUserId, otherUserId)))
 
                 currentUserDocRef
                     .collection("engagedChatChannels")

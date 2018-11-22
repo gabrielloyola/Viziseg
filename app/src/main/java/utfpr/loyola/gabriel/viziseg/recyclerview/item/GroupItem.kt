@@ -17,11 +17,6 @@ class GroupItem(val group: Group,
     override fun bind(viewHolder: ViewHolder, position: Int) {
         viewHolder.textView_name.text = group.name
         viewHolder.textView_description.text = group.description
-        if (group.groupPicturePath != null)
-            GlideApp.with(context)
-                .load(StorageUtil.pathToReference(group.groupPicturePath))
-                .placeholder(R.drawable.ic_group_black_24dp)
-                .into(viewHolder.imageView_group_picture)
     }
 
     override fun getLayout() = R.layout.item_group

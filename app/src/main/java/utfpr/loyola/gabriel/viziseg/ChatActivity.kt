@@ -1,9 +1,6 @@
 package utfpr.loyola.gabriel.viziseg
 
 import android.app.Activity
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.provider.MediaStore
@@ -14,10 +11,8 @@ import com.google.firebase.auth.FirebaseAuth
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.google.firebase.firestore.ListenerRegistration
-import utfpr.loyola.gabriel.viziseg.model.MessageType
 import utfpr.loyola.gabriel.viziseg.model.TextMessage
 import utfpr.loyola.gabriel.viziseg.util.FirestoreUtil
-import org.jetbrains.anko.startActivityForResult
 import com.xwray.groupie.kotlinandroidextensions.Item
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.Section
@@ -103,6 +98,7 @@ class ChatActivity : AppCompatActivity() {
         fun init() {
             recycler_view_messages.apply {
                 layoutManager = LinearLayoutManager(this@ChatActivity)
+                (layoutManager as LinearLayoutManager).stackFromEnd = true
                 adapter = GroupAdapter<ViewHolder>().apply {
                     messagesSection = Section(messages)
                     this.add(messagesSection)
@@ -118,6 +114,6 @@ class ChatActivity : AppCompatActivity() {
         else
             updateItems()
 
-        recycler_view_messages.scrollToPosition(recycler_view_messages.adapter?.itemCount!! - 1)
+        recycler_view_messages.scrollToPosition(recycler_view_messages.adapter?.itemCount!!)
     }
 }
