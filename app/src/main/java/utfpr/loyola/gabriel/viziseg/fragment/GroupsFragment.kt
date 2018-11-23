@@ -80,7 +80,8 @@ class GroupsFragment : Fragment() {
         if (item is GroupItem) {
             startActivity<ChatActivity>(
                 AppConstants.GROUP_NAME to item.group.name,
-                AppConstants.GROUP_ID to item.groupId
+                AppConstants.GROUP_ID to item.groupId,
+                AppConstants.GROUP_CHAT to "TRUE"
             )
         }
     }

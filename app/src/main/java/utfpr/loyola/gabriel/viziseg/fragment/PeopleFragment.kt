@@ -72,7 +72,8 @@ class PeopleFragment : Fragment() {
         if (item is PersonItem) {
             startActivity<ChatActivity>(
                 AppConstants.USER_NAME to item.person.name,
-                AppConstants.USER_ID to item.userId
+                AppConstants.USER_ID to item.userId,
+                AppConstants.GROUP_CHAT to "FALSE"
             )
         }
     }

@@ -5,4 +5,5 @@ object AppConstants {
     const val USER_ID = "USER_ID"
     const val GROUP_NAME = "GROUP_NAME"
     const val GROUP_ID = "GROUP_ID"
+    const val GROUP_CHAT = "FALSE"
 }

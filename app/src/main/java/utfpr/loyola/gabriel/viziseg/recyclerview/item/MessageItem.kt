@@ -1,5 +1,6 @@
 package utfpr.loyola.gabriel.viziseg.recyclerview.item
 
+import android.os.Build
 import android.view.Gravity
 import android.widget.FrameLayout
 import com.google.firebase.auth.FirebaseAuth
@@ -10,6 +11,7 @@ import com.xwray.groupie.kotlinandroidextensions.ViewHolder
 import kotlinx.android.synthetic.main.item_text_message.*
 import org.jetbrains.anko.backgroundResource
 import org.jetbrains.anko.wrapContent
+import utfpr.loyola.gabriel.viziseg.AppConstants
 import java.text.SimpleDateFormat
 
 abstract class MessageItem(private val message: Message)
@@ -30,12 +32,19 @@ abstract class MessageItem(private val message: Message)
                 val lParams = FrameLayout.LayoutParams(wrapContent, wrapContent, Gravity.END)
                 this.layoutParams = lParams
             }
+            viewHolder.textView_message_sender.apply {
+                text = "Eu"
+                this.gravity = Gravity.END
+            }
         }
         else {
             viewHolder.message_root.apply {
                 backgroundResource = R.drawable.rect_round_grey
                 val lParams = FrameLayout.LayoutParams(wrapContent, wrapContent, Gravity.START)
                 this.layoutParams = lParams
+            }
+            viewHolder.textView_message_sender.apply {
+                text = message.senderName
             }
         }
     }

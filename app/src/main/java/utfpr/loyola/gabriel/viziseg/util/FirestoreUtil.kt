@@ -103,40 +103,78 @@ object FirestoreUtil {
 
     fun removeListener(registration: ListenerRegistration) = registration.remove()
 
-    fun createGroup(groupName: String,
-                    groupDescription: String,
+    fun createGroup(groupName: String = "",
+                    groupDescription: String = "",
                     userIds: MutableList<String>) {
 
         val newGroup = groupsCollectionRef.document()
         newGroup.set(Group(groupName, groupDescription, userIds))
     }
 
-    fun getOrCreateChatChannel(otherUserId: String,
+    fun getOrCreateChatChannel(otherUserId: String?,
+                               groupId: String?,
                                onComplete: (channelId: String) -> Unit) {
-        currentUserDocRef.collection("engagedChatChannels")
-            .document(otherUserId).get().addOnSuccessListener {
-                if (it.exists()) {
-                    onComplete(it["channelId"] as String)
-                    return@addOnSuccessListener
+        if (!groupId.isNullOrBlank()) {
+            currentUserDocRef.collection("engagedChatChannels")
+                .document(groupId!!).get().addOnSuccessListener {
+                    if (it.exists()) {
+                        onComplete(it["channelId"] as String)
+                        return@addOnSuccessListener
+                    }
+
+                    val newChannel = chatChannelsCollectionRef.document()
+                    firestoreInstance.collection("groups")
+                        .document(groupId).get().addOnSuccessListener { groupItem ->
+                            val group = groupItem.toObject(Group::class.java!!)
+                            if (group != null) {
+                                newChannel.set(ChatChannel(group.userIds))
+                                group.userIds.forEach {
+                                    val user = firestoreInstance.document("users/$it")
+                                    user.collection("engagedChatChannels")
+                                        .document(groupId)
+                                        .set(mapOf("channelId" to newChannel.id))
+                                }
+                            }
+                        }
+
+                    currentUserDocRef
+                        .collection("engagedChatChannels")
+                        .document(groupId)
+                        .set(mapOf("channelId" to newChannel.id))
+
+                    firestoreInstance.collection("groups")
+                        .document(groupId)
+                        .update(mapOf("channelId" to newChannel.id))
+
+                    onComplete(newChannel.id)
                 }
+        } else {
+            currentUserDocRef.collection("engagedChatChannels")
+                .document(otherUserId!!).get().addOnSuccessListener {
+                    if (it.exists()) {
+                        onComplete(it["channelId"] as String)
+                        return@addOnSuccessListener
+                    }
 
-                val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
+                    val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
 
-                val newChannel = chatChannelsCollectionRef.document()
-                newChannel.set(ChatChannel(mutableListOf(currentUserId, otherUserId)))
+                    val newChannel = chatChannelsCollectionRef.document()
+                    newChannel.set(ChatChannel(mutableListOf(currentUserId, otherUserId)))
 
-                currentUserDocRef
-                    .collection("engagedChatChannels")
-                    .document(otherUserId)
-                    .set(mapOf("channelId" to newChannel.id))
+                    currentUserDocRef
+                        .collection("engagedChatChannels")
+                        .document(otherUserId)
+                        .set(mapOf("channelId" to newChannel.id))
 
-                firestoreInstance.collection("users").document(otherUserId)
-                    .collection("engagedChatChannels")
-                    .document(currentUserId)
-                    .set(mapOf("channelId" to newChannel.id))
+                    firestoreInstance.collection("users").document(otherUserId)
+                        .collection("engagedChatChannels")
+                        .document(currentUserId)
+                        .set(mapOf("channelId" to newChannel.id))
 
-                onComplete(newChannel.id)
-            }
+                    onComplete(newChannel.id)
+                }
+        }
+
     }
 
     fun addChatMessagesListener(channelId: String, context: Context,

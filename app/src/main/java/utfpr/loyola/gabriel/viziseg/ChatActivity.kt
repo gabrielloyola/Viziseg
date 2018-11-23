@@ -29,6 +29,7 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var currentChannelId: String
     private lateinit var currentUser: User
     private lateinit var otherUserId: String
+    private lateinit var groupId: String
 
     private lateinit var messagesListenerRegistration: ListenerRegistration
     private var shouldInitRecyclerView = true
@@ -39,36 +40,59 @@ class ChatActivity : AppCompatActivity() {
         setContentView(R.layout.activity_chat)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = intent.getStringExtra(AppConstants.USER_NAME)
 
         FirestoreUtil.getCurrentUser {
             currentUser = it
         }
 
-        otherUserId = intent.getStringExtra(AppConstants.USER_ID)
-        FirestoreUtil.getOrCreateChatChannel(otherUserId) { channelId ->
-            currentChannelId = channelId
+        if(intent.getStringExtra(AppConstants.GROUP_CHAT) == "FALSE") {
+            supportActionBar?.title = intent.getStringExtra(AppConstants.USER_NAME)
 
-            messagesListenerRegistration =
-                    FirestoreUtil.addChatMessagesListener(channelId, this, this::updateRecyclerView)
+            otherUserId = intent.getStringExtra(AppConstants.USER_ID)
+            FirestoreUtil.getOrCreateChatChannel(otherUserId, "") { channelId ->
+                currentChannelId = channelId
 
-            imageView_send.setOnClickListener {
-                val messageToSend =
-                    TextMessage(editText_message.text.toString(), Calendar.getInstance().time,
-                        FirebaseAuth.getInstance().currentUser!!.uid,
-                        otherUserId, currentUser.name)
-                editText_message.setText("")
-                FirestoreUtil.sendMessage(messageToSend, channelId)
-            }
+                messagesListenerRegistration =
+                        FirestoreUtil.addChatMessagesListener(channelId, this, this::updateRecyclerView)
 
-            fab_send_image.setOnClickListener {
-                val intent = Intent().apply {
-                    type = "image/*"
-                    action = Intent.ACTION_GET_CONTENT
-                    putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
+                imageView_send.setOnClickListener {
+                    val messageToSend =
+                        TextMessage(editText_message.text.toString(), Calendar.getInstance().time,
+                            FirebaseAuth.getInstance().currentUser!!.uid,
+                            otherUserId, currentUser.name)
+                    editText_message.setText("")
+                    FirestoreUtil.sendMessage(messageToSend, channelId)
                 }
-                startActivityForResult(Intent.createChooser(intent, "Select Image"), RC_SELECT_IMAGE)
             }
+        } else {
+            supportActionBar?.title = intent.getStringExtra(AppConstants.GROUP_NAME)
+
+            groupId = intent.getStringExtra(AppConstants.GROUP_ID)
+
+            FirestoreUtil.getOrCreateChatChannel("", groupId) { channelId ->
+                currentChannelId = channelId
+
+                messagesListenerRegistration =
+                        FirestoreUtil.addChatMessagesListener(channelId, this, this::updateRecyclerView)
+
+                imageView_send.setOnClickListener {
+                    val messageToSend =
+                        TextMessage(editText_message.text.toString(), Calendar.getInstance().time,
+                            FirebaseAuth.getInstance().currentUser!!.uid,
+                            groupId, currentUser.name)
+                    editText_message.setText("")
+                    FirestoreUtil.sendMessage(messageToSend, channelId)
+                }
+            }
+        }
+
+        fab_send_image.setOnClickListener {
+            val intent = Intent().apply {
+                type = "image/*"
+                action = Intent.ACTION_GET_CONTENT
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/jpeg", "image/png"))
+            }
+            startActivityForResult(Intent.createChooser(intent, "Select Image"), RC_SELECT_IMAGE)
         }
     }
 
@@ -114,6 +138,6 @@ class ChatActivity : AppCompatActivity() {
         else
             updateItems()
 
-        recycler_view_messages.scrollToPosition(recycler_view_messages.adapter?.itemCount!!)
+        recycler_view_messages.scrollToPosition(recycler_view_messages.adapter?.itemCount!! -1)
     }
 }
